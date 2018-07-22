@@ -1,9 +1,9 @@
-<% timeboards.each do |timeboard| -%>
-<%- options = options_of(timeboard) -%>
-resource "datadog_timeboard" "<%= resource_name_of(timeboard) %>" {
-  title       = "<%= timeboard["title"] %>"
-  description = "<%= timeboard["description"] %>"
-  read_only   = <%= timeboard["read_only"] %>
+<% dashboards.each do |dashboard| -%>
+<%- options = options_of(dashboard) -%>
+resource "datadog_dashboard" "<%= resource_name_of(dashboard) %>" {
+  title       = "<%= dashboard["title"] %>"
+  description = "<%= dashboard["description"] %>"
+  read_only   = <%= dashboard["read_only"] %>
 
   <%- options["graphs"].each do |k, v| -%>
   graph {

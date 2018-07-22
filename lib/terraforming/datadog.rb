@@ -7,4 +7,4 @@ require "terraforming/datadog/version"
 
 require "terraforming/datadog/cli"
 require "terraforming/resource/datadog_monitor"
-require "terraforming/resource/datadog_timeboards"
+require "terraforming/resource/datadog_dashboards"

@@ -1,6 +1,6 @@
 module Terraforming
   module Resource
-    class DatadogTimeboards
+    class DatadogDashboards
       def self.tf(client = nil)
         self.new(client).tf
       end
@@ -18,8 +18,10 @@ module Terraforming
       end
 
       def tfstate
-        resources = timeboard.inject({}) do |result, monitor|
-          options = options_of(timeboard)
+        puts(1)
+        resources = dashboards.inject({}) do |result, monitor|
+          puts(2)
+          options = options_of(dashboard)
           result
         end
 
@@ -58,7 +60,7 @@ module Terraforming
         hash.keys.sort_by { |k| k.length }.reverse[0].length
       end
 
-      def monitors
+      def dashboards
         @client.get_all_screenboards[1]
       end
 
@@ -75,7 +77,7 @@ module Terraforming
       end
 
       def template_path
-        File.join(File.expand_path(File.join(File.dirname(__FILE__), "..")), "template", "tf", "datadog_monitor.erb")
+        File.join(File.expand_path(File.join(File.dirname(__FILE__), "..")), "template", "tf", "datadog_dashboards.erb")
       end
     end
   end
