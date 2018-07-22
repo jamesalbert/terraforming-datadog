@@ -1,0 +1,25 @@
+<% timeboards.each do |timeboard| -%>
+<%- options = options_of(timeboard) -%>
+resource "datadog_timeboard" "<%= resource_name_of(timeboard) %>" {
+  title       = "<%= timeboard["title"] %>"
+  description = "<%= timeboard["description"] %>"
+  read_only   = <%= timeboard["read_only"] %>
+
+  <%- options["graphs"].each do |k, v| -%>
+  graph {
+    title = "Redis latency (ms)"
+    viz   = "timeseries"
+
+    request {
+      q    = "avg:redis.info.latency_ms{$host}"
+      type = "bars"
+    }
+  }
+  <%- end -%>
+
+  template_variable {
+    name   = "host"
+    prefix = "host"
+  }
+}
+<%- end -%>
