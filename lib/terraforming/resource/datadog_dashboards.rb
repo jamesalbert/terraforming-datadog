@@ -1,3 +1,5 @@
+require 'json'
+
 module Terraforming
   module Resource
     class DatadogDashboards
@@ -19,7 +21,7 @@ module Terraforming
 
       def tfstate
         puts(1)
-        resources = dashboards.inject({}) do |result, monitor|
+        resources = dashboards.inject({}) do |result, dashboard|
           puts(2)
           options = options_of(dashboard)
           result
@@ -61,15 +63,15 @@ module Terraforming
       end
 
       def dashboards
-        @client.get_all_screenboards[1]
+        @client.get_dashboards[1]["dashes"]
       end
 
-      def options_of(monitor)
-        monitor["options"]
+      def options_of(dashboard)
+        @client.get_dashboard(id=dashboard["id"])[1]["dash"]
       end
 
-      def resource_name_of(monitor)
-        monitor["name"].gsub(/[^a-zA-Z0-9 ]/, "").gsub(" ", "-")
+      def resource_name_of(dashboard)
+        dashboard["title"].gsub(/[^a-zA-Z0-9 ]/, "").gsub(" ", "-")
       end
 
       def silenced_value(v)

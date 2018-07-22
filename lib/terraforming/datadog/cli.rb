@@ -16,7 +16,7 @@ module Terraforming
       desc "timeboards", "Datadog Timeboards"
       cli_options
       def timeboards
-        execute(Terraforming::Resource::DatadogTimeboards, options)
+        execute(Terraforming::Resource::DatadogDashboards, options)
       end
 
       desc "version", "terraforming-datadog version"

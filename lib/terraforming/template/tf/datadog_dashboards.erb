@@ -1,25 +1,44 @@
 <% dashboards.each do |dashboard| -%>
 <%- options = options_of(dashboard) -%>
-resource "datadog_dashboard" "<%= resource_name_of(dashboard) %>" {
+resource "datadog_timeboard" "<%= resource_name_of(dashboard) %>" {
   title       = "<%= dashboard["title"] %>"
   description = "<%= dashboard["description"] %>"
   read_only   = <%= dashboard["read_only"] %>
 
-  <%- options["graphs"].each do |k, v| -%>
+  <%- options["graphs"].each do |block| -%>
+  <%- graph = block["definition"] -%>
   graph {
-    title = "Redis latency (ms)"
-    viz   = "timeseries"
+    title = "<%= graph["title"] %>"
+    viz   = "<%= graph["viz"] %>"
 
+    <%- graph["requests"].each do |request| -%>
     request {
-      q    = "avg:redis.info.latency_ms{$host}"
-      type = "bars"
+      q = "<%= request["q"] %>"
+      <%- if request.key?("aggregator") -%>
+      aggregator = "<%= request["aggregator"] %>"
+      <%- end -%>
+      type = "<%= request["type"] %>"
+      <%- if request.key?("conditional_format") -%>
+      conditional_format = <%= request["conditional_format"] %>
+      <%- end -%>
+      <%- if request.key?("style") -%>
+      style {
+        palette = "<%= request["style"]["palette"] %>"
+        type = "<%= request["style"]["type"] %>"
+        width = "<%= request["style"]["width"] %>"
+      }
+      <%- end -%>
     }
+    <%- end -%>
+
+    <%- if graph.key?("events") -%>
+    events = [
+    <%- graph["events"].each do |event| -%>
+      "<%= event["q"] %>",
+    <%- end -%>
+    ]
+    <%- end -%>
   }
   <%- end -%>
-
-  template_variable {
-    name   = "host"
-    prefix = "host"
-  }
 }
 <%- end -%>

@@ -1,3 +1,5 @@
+require 'json'
+
 module Terraforming
   module Resource
     class DatadogMonitor
@@ -104,6 +106,7 @@ module Terraforming
       end
 
       def monitors
+        puts JSON.pretty_generate(@client.get_all_monitors[1])
         @client.get_all_monitors[1]
       end
 
