@@ -1,5 +1,3 @@
-require 'json'
-
 module Terraforming
   module Resource
     class DatadogDashboards
@@ -20,10 +18,91 @@ module Terraforming
       end
 
       def tfstate
-        puts(1)
         resources = dashboards.inject({}) do |result, dashboard|
-          puts(2)
           options = options_of(dashboard)
+          attributes = {
+            "id" => dashboard["id"].to_s,
+            "title" => dashboard["description"],
+            "description" => dashboard["description"],
+            "read_only" => dashboard["read_only"]
+          }
+
+          def set(object, subject, prefix, key, default=nil)
+            if default.nil?
+              if subject.key?(key)
+                object["#{prefix}.#{key}"] = subject[key]
+              end
+            else
+              object["#{prefix}.#{key}"] = subject.key?(key) ? subject[key] : default
+            end
+          end
+
+          if options.key?('graphs')
+            options['graphs'].each_with_index do |graph, g_index|
+              prefix = "graph.#{g_index}"
+              set(attributes, graph, prefix, 'title')
+              graph  = graph['definition']
+              # --- scalars
+              set(attributes, graph, prefix, 'viz')
+              set(attributes, graph, prefix, 'autoscale')
+              set(attributes, graph, prefix, 'precision')
+              set(attributes, graph, prefix, 'custom_unit')
+              set(attributes, graph, prefix, 'text_align')
+              set(attributes, graph, prefix, 'include_no_metric_hosts')
+              set(attributes, graph, prefix, 'include_ungrouped_hosts')
+              # --- events
+              if graph.key?('events')
+                attributes["#{prefix}.events"] = graph['events'].map { |e| e['q'] }.join(',')
+              end
+              # --- yaxis
+              if graph.key?('yaxis')
+                y_prefix = "#{prefix}.yaxis"
+                set(attributes, graph['yaxis'], y_prefix, 'min')
+                set(attributes, graph['yaxis'], y_prefix, 'max')
+                set(attributes, graph['yaxis'], y_prefix, 'scale')
+              end
+              # --- style
+              if graph.key?('style')
+                s_prefix = "#{prefix}.style"
+                set(attributes, graph['style'], s_prefix, 'palette')
+                set(attributes, graph['style'], s_prefix, 'palette_flip')
+              end
+              # --- markers
+              if graph.key?('markers')
+                graph['markers'].each_with_index do |marker, m_index|
+                  m_prefix = "#{prefix}.marker.#{m_index}"
+                  set(attributes, marker, m_prefix, 'type')
+                  set(attributes, marker, m_prefix, 'value')
+                  set(attributes, marker, m_prefix, 'label')
+                end
+              end
+              # --- requests
+              if graph.key?('requests')
+                graph['requests'].each_with_index do |request, r_index|
+                  r_prefix = "#{prefix}.request.#{r_index}"
+                  if request.key?('style')
+                    request['style'].each do |key, value|
+                      attributes["#{r_prefix}.style.#{key}"] = value
+                    end
+                  end # end style
+                  set(attributes, request, r_prefix, 'q')
+                  set(attributes, request, r_prefix, 'aggregator')
+                  set(attributes, request, r_prefix, 'type')
+                  set(attributes, request, r_prefix, 'conditional_formats')
+                end
+              end # end request
+            end
+          else
+            attributes['graph.#'] = '0'
+          end # end graph
+
+          result["datadog_timeboard.#{resource_name_of(dashboard)}"] = {
+            "type" => "datadog_dashboard",
+            "primary" => {
+              "id" => dashboard["id"].to_s,
+              "attributes" => attributes
+            }
+          }
           result
         end
 
